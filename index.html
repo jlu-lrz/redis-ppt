@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<!--<section data-transition="convex">
+					&lt;!&ndash;你可以选择这些参数：fede，slide，convex，concave，zoom，或者停用动画：none（在你没有设置时，Reveal.js 默认采用 slide 动画）&ndash;&gt;
+
+					<p class="fragment" style="color:red">111</p>
+					<p class="fragment">222</p>
+				</section>-->
+				<section data-markdown>
+					Redis入门
+					- 初识Redis
+					- API的理解和使用
+					- 小功能大用处
+				</section>
+				<section>
+					<section data-markdown>
+						第一部分：Redis入门
+						- 1.1 Redis特性
+						- 1.2 Redis使用场景
+							- 1.2.1 Redis可以做什么
+							- 1.2.2 Redis不可以做什么
+					</section>
+					<section>
+						1.1 Redis特性<br>
+						Redis之所以受到如此多公司的青睐，必然有之过人之处，下面是关于Redis的8个重要特性。
+					</section>
+					<section>
+						1. 速度快
+						<aside class="notes">
+							正常情况下，Redis执行命令的速度非常快，官方给出的数字是读写性能可以达到10万/秒，当然这也取决于机器的性能，但这里先不讨论机器性能上的差异，只分析一下是什么造就了Redis除此之快的速度，可以大致归纳为以下三点：<br>
+							1.Redis的所有数据都是存放在内存中的，表1-1是谷歌公司2009年给出的各层级硬件执行速度，所以把数据放在内存中是Redis速度快的最主要原因。<br>
+							2.Redis是用C语言实现的，一般来说C语言实现的程序“距离”操作系统更近，执行速度相对会更快。<br>
+							3.Redis使用了单线程架构，预防了多线程可能产生的竞争问题。
+						</aside>
+					</section>
+					<section>
+						2. 基于键值对的数据结构服务器
+						<aside class="notes">
+							几乎所有的编程语言都提供了类似字典的功能，例如Java里的map、Python里的dict，类似于这种组织数据的方式叫作基于键值的方式，与很多键值对数据库不同的是，Redis中的值不仅可以是字符串，而且还可以是具体的数据结构，这样不仅能便于在许多应用场景的开发，同时也能够提高开发效率。Redis的全称是REmote Dictionary Server，它主要提供了5种数据结构：字符串、哈希、列表、集合、有序集合，同时在字符串的基础之上演变出了位图（Bitmaps）和HyperLogLog两种神奇的“数据结构”，并且随着LBS（Location Based Service，基于位置服务）的不断发展，Redis3.2版本中加入有关GEO（地理信息定位）的功能，总之在这些数据结构的帮助下，开发者可以开发出各种“有意思”的应用。
+						</aside>
+					</section>
+					<section>
+						3. 丰富的功能
+						<aside class="notes">
+							除了5种数据结构，Redis还提供了许多额外的功能：<br>
+							1. 提供了键过期功能，可以用来实现缓存。<br>
+							2. 提供了发布订阅功能，可以用来实现消息系统。<br>
+							3. 支持Lua脚本功能，可以利用Lua创造出新的Redis命令。<br>
+							4. 提供了简单的事务功能，能在一定程度上保证事务特性。<br>
+							5. 提供了流水线（Pipeline）功能，这样客户端能将一批命令一次性传到Redis，减少了网络的开销。
+						</aside>
+					</section>
+					<section>
+						4. 简单稳定
+						<aside class="notes">
+							Redis的简单主要表现在三个方面。首先，Redis的源码很少，早期版本的代码只有2万行左右，3.0版本以后由于添加了集群特性，代码增至5万行左右，相对于很多NoSQL数据库来说代码量相对要少很多，也就意味着普通的开发和运维人员完全可以“吃透”它。其次，Redis使用单线程模型，这样不仅使得Redis服务端处理模型变得简单，而且也使得客户端开发变得简单。最后，Redis不需要依赖于操作系统中的类库（例如Memcache需要依赖libevent这样的系统类库），Redis自己实现了事件处理的相关功能。
+						</aside>
+					</section>
+					<section>
+						5. 客户端语言多
+						<aside class="notes">
+							Redis提供了简单的TCP通信协议，很多编程语言可以很方便地接入到Redis，并且由于Redis受到社区和各大公司的广泛认可，所以支持Redis的客户端语言也非常多，几乎涵盖了主流的编程语言，例如Java、PHP、Python、C、C++、Nodejs等
+						</aside>
+					</section>
+					<section>
+						6. 持久化<br>
+						<image src="./image/QQ截图20180419181617.png"></image>
+						<aside class="notes">
+							通常看，将数据放在内存中是不安全的，一旦发生断电或者机器故障，重要的数据可能就会丢失，因此Redis提供了两种持久化方式：RDB和AOF，即可以用两种策略将内存的数据保存到硬盘中（如图1-1所示），这样就保证了数据的可持久性，第5章我们将对Redis的持久化进行详细说明。
+						</aside>
+					</section>
+					<section>
+						7. 主从复制<br>
+						<image src="./image/QQ截图20180419182920.png"></image>
+						<aside class="notes">
+							Redis提供了复制功能，实现了多个相同数据的Redis副本（如图1-2所示），复制功能是分布式Redis的基础。
+						</aside>
+					</section>
+					<section>
+						8. 高可用和分布式<br>
+						<aside class="notes">
+							Redis从2.8版本正式提供了高可用实现Redis Sentinel，它能够保证Redis节点的故障发现和故障自动转移。Redis从3.0版本正式提供了分布式实现Redis Cluster，它是Redis真正的分布式实现，提供了高可用、读写和容量的扩展性。
+						</aside>
+					</section>
+				</section>
+				<section>
+				<!--<section data-background="#48D1CC">-->
+					<section data-markdown>
+						- 1.2 Redis使用场景
+							- 1.2.1 Redis可以做什么
+							- 1.2.2 Redis不可以做什么
+					</section>
+					<section>
+						Redis可以做什么?
+					</section>
+					<section>
+						1. 缓存
+						<aside class="notes">
+							缓存机制几乎在所有的大型网站都有使用，合理地使用缓存不仅可以加快数据的访问速度，而且能够有效地降低后端数据源的压力。Redis提供了键值过期时间设置，并且也提供了灵活控制最大内存和内存溢出后的淘汰策略。可以这么说，一个合理的缓存设计能够为一个网站的稳定保驾护航。第11章将对缓存的设计与使用进行详细说明。
+						</aside>
+					</section>
+					<section>
+						2. 排行榜系统
+						<aside class="notes">
+							排行榜系统几乎存在于所有的网站，例如按照热度排名的排行榜，按照发布时间的排行榜，按照各种复杂维度计算出的排行榜，Redis提供了列表和有序集合数据结构，合理地使用这些数据结构可以很方便地构建各种排行榜系统。
+						</aside>
+					</section>
+					<section>
+						3. 计数器应用
+						<aside class="notes">
+							计数器在网站中的作用至关重要，例如视频网站有播放数、电商网站有浏览数，为了保证数据的实时性，每一次播放和浏览都要做加1的操作，如果并发量很大对于传统关系型数据的性能是一种挑战。Redis天然支持计数功能而且计数的性能也非常好，可以说是计数器系统的重要选择。
+						</aside>
+					</section>
+					<section>
+						4. 社交网络
+						<aside class="notes">
+							赞/踩、粉丝、共同好友/喜好、推送、下拉刷新等是社交网站的必备功能，由于社交网站访问量通常比较大，而且传统的关系型数据不太适合保存这种类型的数据，Redis提供的数据结构可以相对比较容易地实现这些功能。
+						</aside>
+					</section>
+					<section>
+						5. 消息队列系统
+						<aside class="notes">
+							消息队列系统可以说是一个大型网站的必备基础组件，因为其具有业务解耦、非实时业务削峰等特性。Redis提供了发布订阅功能和阻塞队列的功能，虽然和专业的消息队列比还不够足够强大，但是对于一般的消息队列功能基本可以满足。
+						</aside>
+					</section>
+					<section>
+						Redis不可以做什么？
+						<aside class="notes">
+							实际上和任何一门技术一样，每个技术都有自己的应用场景和边界，也就是说Redis并不是万金油，有很多适合它解决的问题，但是也有很多不合适它解决的问题。我们可以站在数据规模和数据冷热的角度来进行分析。<br>
+							站在数据规模的角度看，数据可以分为大规模数据和小规模数据，我们知道Redis的数据是存放在内存中的，虽然现在内存已经足够便宜，但是如果数据量非常大，例如每天有几亿的用户行为数据，使用Redis来存储的话，基本上是个无底洞，经济成本相当的高。<br>
+							站在数据冷热的角度看，数据分为热数据和冷数据，热数据通常是指需要频繁操作的数据，反之为冷数据，例如对于视频网站来说，视频基本信息基本上在各个业务线都是经常要操作的数据，而用户的观看记录不一定是经常需要访问的数据，这里暂且不讨论两者数据规模的差异，单纯站在数据冷热的角度上看，视频信息属于热数据，用户观看记录属于冷数据。如果将这些冷数据放在Redis中，基本上是对于内存的一种浪费，但是对于一些热数据可以放在Redis中加速读写，也可以减轻后端存储的负载，可以说是事半功倍。<br>
+							所以，Redis并不是万金油，相信随着我们对Redis的逐步学习，能够清楚Redis真正的使用场景。
+						</aside>
+					</section>
+				</section>
+				<section>
+					<section data-markdown >
+						第二部分：API的理解和使用
+						- 字符串
+						- 哈希
+						- 列表
+						- 集合
+						- 有序集合
+						- 键管理
+					</section>
+					<section>
+						字符串<br>
+						<ul>
+							<li>
+								字符串类型是Redis最基础的数据结构。首先键都是字符串类型，而且其他几种数据结构都是在字符串类型基础上构建的，所以字符串类型能为其他四种数据结构的学习奠定基础。字符串类型的值实际可以是字符串（简单的字符串、复杂的字符串（例如JSON、XML））、数字（整数、浮点数），甚至是二进制（图片、音频、视频），但是值最大不能超过512MB。
+							</li>
+						</ul>
+					</section>
+					<section>
+						string类型的常用命令<br>
+						<image src="./image/QQ截图20180420105439.png"></image>
+					</section>
+					<section>
+						string类型的应用场景：缓存功能<br>
+						<image src="./image/QQ截图20180420113534.png"></image>
+					</section>
+					<section data-markdown>
+						缓存：
+						```
+						$redis = new Redis();
+						//连接本地的 Redis 服务
+						$redis->connect('127.0.0.1', 6379);
+						function getUserInfo($id) {
+							$userRedisKey = 'user:info:'.$id;
+							//判断缓存的键是否存在
+							if(!$redis->exists($userRedisKey)) {
+								$data = $this->get_mysql_data($userRedisKey);
+								$json = json_encode($data);
+								//存入redis
+								$redis->set($userRedisKey, $json);
+								//设置过期时间5分钟
+								$redis->expire($userRedisKey, 60*5);
+								return $data;
+							}
+							$json = $redis->get($userRedisKey);
+							$data = json_decode($json, true);
+							return $data;
+						}
+						```
+					</section>
+					<section data-markdown>
+						计数<br>
+						- 许多应用都会使用Redis作为计数的基础工具，它可以实现快速计数、查询缓存的功能，同时数据可以异步落地到其他数据源。例如笔者所在团队的视频播放数系统就是使用Redis作为视频播放数计数的基础组件，用户每播放一次视频，相应的视频播放数就会自增1：
+						```
+						function incrVideoCounter($id) {
+
+						}
+						```
+
+					</section>
+					<!--<section>
+						key的相关命令<br>
+						<image src="./image/QQ截图20180420105126.png"></image>
+					</section>-->
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
