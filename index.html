@@ -168,7 +168,7 @@
 						- 键管理
 					</section>
 					<section>
-						字符串<br>
+						1.字符串<br>
 						<ul>
 							<li>
 								字符串类型是Redis最基础的数据结构。首先键都是字符串类型，而且其他几种数据结构都是在字符串类型基础上构建的，所以字符串类型能为其他四种数据结构的学习奠定基础。字符串类型的值实际可以是字符串（简单的字符串、复杂的字符串（例如JSON、XML））、数字（整数、浮点数），甚至是二进制（图片、音频、视频），但是值最大不能超过512MB。
@@ -210,17 +210,51 @@
 					<section data-markdown>
 						计数<br>
 						- 许多应用都会使用Redis作为计数的基础工具，它可以实现快速计数、查询缓存的功能，同时数据可以异步落地到其他数据源。例如笔者所在团队的视频播放数系统就是使用Redis作为视频播放数计数的基础组件，用户每播放一次视频，相应的视频播放数就会自增1：
+
 						```
 						function incrVideoCounter($id) {
-
+							$key = 'vedio:playCount:'.$id;
+							return $redis->incr($key);
 						}
 						```
 
+					</section>
+					<section>
+						限速<br>
+						<aside class="notes">
+							很多应用出于安全的考虑，会在每次进行登录时，让用户输入手机验证码，从而确定是否是用户本人。但是为了短信接口不被频繁访问，会限制用户每分钟获取验证码的频率，例如一分钟不能超过5次。
+						</aside>
+
+						<pre><code data-trim>
+						function rateLimit($phone) {
+							$key = 'shortMsg:limit'.$phone;
+							$isExists = $redis->set($key, 1, 'EX 60', 'NX');
+							if ($isExists != null || $redis->incr($key) <= 5) {
+								//通过
+							} else {
+								//限速
+							}
+						}
+						</code></pre>
 					</section>
 					<!--<section>
 						key的相关命令<br>
 						<image src="./image/QQ截图20180420105126.png"></image>
 					</section>-->
+				</section>
+				<section>
+					<section>
+						2.哈希<br>
+						<ul>
+							<li>
+								字符串类型是Redis最基础的数据结构。首先键都是字符串类型，而且其他几种数据结构都是在字符串类型基础上构建的，所以字符串类型能为其他四种数据结构的学习奠定基础。字符串类型的值实际可以是字符串（简单的字符串、复杂的字符串（例如JSON、XML））、数字（整数、浮点数），甚至是二进制（图片、音频、视频），但是值最大不能超过512MB。
+							</li>
+						</ul>
+					</section>
+					<section>
+						hash常用命令
+						<img src="./image/QQ截图20180508180507.png">
+					</section>
 				</section>
 			</div>
 		</div>
