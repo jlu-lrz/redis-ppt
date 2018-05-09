@@ -226,7 +226,8 @@
 						</aside>
 
 						<pre><code data-trim>
-						function rateLimit($phone) {
+						function rateLimit($phone)
+						{
 							$key = 'shortMsg:limit'.$phone;
 							$isExists = $redis->set($key, 1, 'EX 60', 'NX');
 							if ($isExists != null || $redis->incr($key) <= 5) {
@@ -244,20 +245,48 @@
 				</section>
 				<section>
 					<section>
-						2.哈希<br>
-						<ul>
-							<li>
-								字符串类型是Redis最基础的数据结构。首先键都是字符串类型，而且其他几种数据结构都是在字符串类型基础上构建的，所以字符串类型能为其他四种数据结构的学习奠定基础。字符串类型的值实际可以是字符串（简单的字符串、复杂的字符串（例如JSON、XML））、数字（整数、浮点数），甚至是二进制（图片、音频、视频），但是值最大不能超过512MB。
-							</li>
-						</ul>
+						2.哈希hash<br>
+						<aside class="notes">
+							几乎所有的编程语言都提供了hash类型，他们的叫法可能是哈希，字典，关联数组。在Redis中，哈希类型是指键值本身
+							又是一个键值键值对结构，形如value = {{field1,value1},...{fieldN,valueN}},Redis键值对和哈希类型二者的关系可用下图表示
+						</aside>
+						<img src="./image/QQ截图20180509212112.png">
 					</section>
 					<section>
 						hash常用命令
 						<img src="./image/QQ截图20180508180507.png">
 					</section>
 					<section>
-						hash常用命令
+						hash使用场景
 						<img src="./image/QQ截图20180509164842.png">
+					</section>
+					<section>
+						使用hash类型缓存用户信息
+						<pre><code data-trim>
+							function getUserInfo($id)
+							{
+								$userRedisKey = 'user:info:'.$id;
+								$userInfoMap = $redis->hgetall($userRedisKey);
+								if ($userInfoMap == null) {
+									//从MySQL中获取用户信息
+									$userInfo = $this->getMysqlData($id);
+									//将$userInfo变为映射关系使用hset保存到Redis
+									foreach ($userInfo as $key=>$value) {
+										//注：此处可以加入流水线或使用hmset
+										$redis->hset($userRedisKey, $key, $value);
+									}
+								}
+							}
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						3.列表list
+						<aside class="notes">
+							列表（list）类型是用来存储多个有序的字符串，如图2-18所示，a、b、c、d、e五个元素从左到右组成了一个有序的列表，列表中的每个字符串称为元素（element），一个列表最多可以存储232-1个元素。在Redis中，可以对列表两端插入（push）和弹出（pop），还可以获取指定范围的元素列表、获取指定索引下标的元素等（如图2-18和图2-19所示）。列表是一种比较灵活的数据结构，它可以充当栈和队列的角色，在实际开发上有很多应用场景。
+						</aside>
+						<img src="./image/QQ截图20180509213941.png">
 					</section>
 				</section>
 			</div>
