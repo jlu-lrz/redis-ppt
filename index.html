@@ -288,6 +288,69 @@
 						</aside>
 						<img src="./image/QQ截图20180509213941.png">
 					</section>
+					<section>
+						list常用命令
+						<img src="./image/QQ截图20180510113629.png">
+					</section>
+					<section>
+						list使用场景<br>
+						<ul>
+							<li>消息队列</li>
+							<li>时间轴（Timeline）</li>
+						</ul><br>
+						<img src="./image/QQ截图20180510161905.png">
+						<aside class="notes">
+							1.消息队列：如图所示，Redis的lpush+brpop命令组合即可实现阻塞队列，生产者客户端使用lrpush从列表左侧插入元素，多个消费者客户端使用brpop命令阻塞式的“抢”列表尾部的元素，多个客户端保证了消费的负载均衡和高可用性。
+							2.时间轴：list作为双向链表，不光可以作为队列使用。如果将它用作栈便可以成为一个公用的时间轴。当用户发完微博后，都通过lpush将它存放在一个 key 为LATEST_WEIBO的list中，之后便可以通过lrange取出当前最新的微博。
+						</aside>
+					</section>
+					<section>
+						<pre><code data-trim>
+							--------------------------------------------
+							//php代码
+							while(TRUE) {
+								$rst = $redis->brpop('list:01');
+								if ($rst) {
+									//do something
+									print_r($t); //方便参看返回结果
+								}
+							}
+							---------------------------------------------
+							//在redis命令行键入
+							127.0.0.1:6379> lpush list:01 'Hello Redis' 'Hello PHP'
+							---------------------------------------------
+							//结果
+							Array
+							(
+							[0] => list:01
+							[1] => Hello PHP
+							)
+							Array
+							(
+							[0] => list:01
+							[1] => Hello Redis
+							)
+						</code></pre>
+					</section>
+					<section data-markdown>
+						列表的使用场景很多，可参考：
+						- lpush+lpop=Stack（栈）
+						- lpush+rpop=Queue（队列）
+						- lpsh+ltrim=Capped Collection（有限集合）
+						- lpush+brpop=Message Queue（消息队列）
+					</section>
+				</section>
+				<section>
+					<section>
+						4.集合set<br>
+						<img src="./image/QQ截图20180510175701.png">
+						<aside class="notes">
+							集合（set）类型也是用来保存多个的字符串元素，但和列表类型不一样的是，集合中不允许有重复元素，并且集合中的元素是无序的，不能通过索引下标获取元素。如图2-22所示，集合user：1：follow包含着"it"、"music"、"his"、"sports"四个元素，一个集合最多可以存储2^32-1个元素。Redis除了支持集合内的增删改查，同时还支持多个集合取交集、并集、差集，合理地使用好集合类型，能在实际开发中解决很多实际问题。
+						</aside>
+					</section>
+					<section>
+						set
+					</section>
 				</section>
 			</div>
 		</div>
