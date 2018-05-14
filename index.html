@@ -168,7 +168,7 @@
 						- 键管理
 					</section>
 					<section>
-						1.字符串<br>
+						1.字符串(string)<br>
 						<ul>
 							<li>
 								字符串类型是Redis最基础的数据结构。首先键都是字符串类型，而且其他几种数据结构都是在字符串类型基础上构建的，所以字符串类型能为其他四种数据结构的学习奠定基础。字符串类型的值实际可以是字符串（简单的字符串、复杂的字符串（例如JSON、XML））、数字（整数、浮点数），甚至是二进制（图片、音频、视频），但是值最大不能超过512MB。
@@ -245,7 +245,7 @@
 				</section>
 				<section>
 					<section>
-						2.哈希hash<br>
+						2.哈希(hash)<br>
 						<aside class="notes">
 							几乎所有的编程语言都提供了hash类型，他们的叫法可能是哈希，字典，关联数组。在Redis中，哈希类型是指键值本身
 							又是一个键值键值对结构，形如value = {{field1,value1},...{fieldN,valueN}},Redis键值对和哈希类型二者的关系可用下图表示
@@ -253,11 +253,11 @@
 						<img src="./image/QQ截图20180509212112.png">
 					</section>
 					<section>
-						hash常用命令
+						hash常用命令<br>
 						<img src="./image/QQ截图20180508180507.png">
 					</section>
 					<section>
-						hash使用场景
+						hash使用场景<br>
 						<img src="./image/QQ截图20180509164842.png">
 					</section>
 					<section>
@@ -282,14 +282,14 @@
 				</section>
 				<section>
 					<section>
-						3.列表list
+						3.列表(list)<br>
 						<aside class="notes">
 							列表（list）类型是用来存储多个有序的字符串，如图2-18所示，a、b、c、d、e五个元素从左到右组成了一个有序的列表，列表中的每个字符串称为元素（element），一个列表最多可以存储232-1个元素。在Redis中，可以对列表两端插入（push）和弹出（pop），还可以获取指定范围的元素列表、获取指定索引下标的元素等（如图2-18和图2-19所示）。列表是一种比较灵活的数据结构，它可以充当栈和队列的角色，在实际开发上有很多应用场景。
 						</aside>
 						<img src="./image/QQ截图20180509213941.png">
 					</section>
 					<section>
-						list常用命令
+						list常用命令<br>
 						<img src="./image/QQ截图20180510113629.png">
 					</section>
 					<section>
@@ -342,14 +342,84 @@
 				</section>
 				<section>
 					<section>
-						4.集合set<br>
+						4.集合(set)<br>
 						<img src="./image/QQ截图20180510175701.png">
 						<aside class="notes">
 							集合（set）类型也是用来保存多个的字符串元素，但和列表类型不一样的是，集合中不允许有重复元素，并且集合中的元素是无序的，不能通过索引下标获取元素。如图2-22所示，集合user：1：follow包含着"it"、"music"、"his"、"sports"四个元素，一个集合最多可以存储2^32-1个元素。Redis除了支持集合内的增删改查，同时还支持多个集合取交集、并集、差集，合理地使用好集合类型，能在实际开发中解决很多实际问题。
 						</aside>
 					</section>
 					<section>
-						set
+						set常用命令<br>
+						<img src="./image/QQ截图20180514174152.png" height="650">
+					</section>
+					<section>
+						set使用场景
+						<pre><code data-trim>
+							//①给用户添加标签
+							sadd user:1:tags tag1 tag2 tag5
+							sadd user:2:tags tag1 tag2 tag5
+							//②给标签添加用户
+							sadd tag1:users user:1 user:3
+							sadd tag2:users user:1 user:2 user:3
+							//③删除用户下的标签
+							srem user:1:tags tag1 tag5
+							//④删除标签下的用户
+							srem tag1:users user:1
+							srem tag5:users user:1
+							//⑤计算用户共同感兴趣的标签
+							sinter user:1:tags user:2:tags
+
+							//前面只是给出了使用Redis集合类型实现标签的基本思路，实际上一个标签系统远比这个要复杂得多，
+							//不过集合类型的应用场景通常为以下几种：
+							sadd=Tagging（标签）
+							spop/srandmember=Random item（生成随机数，比如抽奖）
+							sadd+sinter=Social Graph（社交需求）
+						</code></pre>
+						<aside class="notes">
+							用户和标签的关系维护应该在一个事务内执行，防止部分命令失败造成的数据不一致，有关如何将两个命令放在一个事务，第3章会介绍事务以及Lua的使用方法。
+						</aside>
+					</section>
+				</section>
+				<section>
+					<section>
+						5.有序集合(sorted set)<br>
+						<img src="./image/QQ截图20180514194020.png">
+						<table style="font-size:20px">
+							<tr>
+								<th>数据结构</th>
+								<th>是否允许重复元素</th>
+								<th>是否有序</th>
+								<th>有序实现方式</th>
+								<th>应用场景</th>
+							</tr>
+							<tr>
+								<td>列表</td>
+								<td>是</td>
+								<td>是</td>
+								<td>索引下标</td>
+								<td>时间轴、消息队列等</td>
+							</tr>
+							<tr>
+								<td>集合</td>
+								<td>否</td>
+								<td>否</td>
+								<td>无</td>
+								<td>标签、社交等</td>
+							</tr>
+							<tr>
+								<td>有序集合</td>
+								<td>否</td>
+								<td>是</td>
+								<td>分值</td>
+								<td>排行榜系统、社交等</td></tr>
+						</table>
+						<aside	class="notes">
+							有序集合相对于哈希、列表、集合来说会有一点点陌生，但既然叫有序集合，那么它和集合必然有着联系，它保留了集合不能有重复成员的特性，但不同的是，有序集合中的元素可以排序。但是它和列表使用索引下标作为排序依据不同的是，它给每个元素设置一个分数（score）作为排序的依据。如图所示，该有序集合包含kris、mike、frank、tim、martin、tom，它们的分数分别是1、91、200、220、250、251，有序集合提供了获取指定分数和元素范围查询、计算成员排名等功能，合理的利用有序集合，能帮助我们在实际开发中解决很多问题。
+						</aside>
+					</section>
+					<section>
+						有序集合(sorted set)常用命令<br>
+						<img src="./image/QQ截图20180514201612.png">
 					</section>
 				</section>
 			</div>
@@ -363,6 +433,11 @@
 			// - https://github.com/hakimel/reveal.js#configuration
 			// - https://github.com/hakimel/reveal.js#dependencies
 			Reveal.initialize({
+				width: "100%",
+				height: "100%",
+				margin: 0,
+				minScale: 1,
+				maxScale: 1,
 				dependencies: [
 					{ src: 'plugin/markdown/marked.js' },
 					{ src: 'plugin/markdown/markdown.js' },
