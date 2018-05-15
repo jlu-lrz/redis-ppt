@@ -157,6 +157,7 @@
 						</aside>
 					</section>
 				</section>
+				<!--字符串-->
 				<section>
 					<section data-markdown >
 						第二部分：API的理解和使用
@@ -217,14 +218,12 @@
 							return $redis->incr($key);
 						}
 						```
-
 					</section>
 					<section>
 						限速<br>
 						<aside class="notes">
 							很多应用出于安全的考虑，会在每次进行登录时，让用户输入手机验证码，从而确定是否是用户本人。但是为了短信接口不被频繁访问，会限制用户每分钟获取验证码的频率，例如一分钟不能超过5次。
 						</aside>
-
 						<pre><code data-trim>
 						function rateLimit($phone)
 						{
@@ -243,6 +242,7 @@
 						<image src="./image/QQ截图20180420105126.png"></image>
 					</section>-->
 				</section>
+				<!--哈希-->
 				<section>
 					<section>
 						2.哈希(hash)<br>
@@ -280,6 +280,7 @@
 						</code></pre>
 					</section>
 				</section>
+				<!--列表-->
 				<section>
 					<section>
 						3.列表(list)<br>
@@ -305,6 +306,7 @@
 						</aside>
 					</section>
 					<section>
+						list使用场景<br>
 						<pre><code data-trim>
 							--------------------------------------------
 							//php代码
@@ -340,6 +342,7 @@
 						- lpush+brpop=Message Queue（消息队列）
 					</section>
 				</section>
+				<!--集合-->
 				<section>
 					<section>
 						4.集合(set)<br>
@@ -380,6 +383,7 @@
 						</aside>
 					</section>
 				</section>
+				<!--有序集合-->
 				<section>
 					<section>
 						5.有序集合(sorted set)<br>
@@ -420,6 +424,91 @@
 					<section>
 						有序集合(sorted set)常用命令<br>
 						<img src="./image/QQ截图20180514201612.png">
+					</section>
+					<section>
+						有序集合(sorted set)使用场景
+						<pre><code data-trim>
+							//①添加用户赞数，例如用户mike上传了一个视频，并获得了3个赞，可以使用有序集合的zadd和zincrby功能：
+							zadd user:ranking:2016_03_15 3 mike
+							//如果之后再获得一个赞，可以使用zincrby：
+							zincrby user:ranking:2016_03_15 1 mike
+							//②取消用户赞数
+							zrem user:ranking:2016_03_15 mike
+							//③展示获取赞数最多的十个用户
+							zrevrangebyrank user:ranking:2016_03_15 0 9
+						</code></pre>
+					</section>
+				</section>
+				<!--Pipeline概念-->
+				<section>
+					<section>
+						第二部分：Piplelie概念<br>
+						<pre><code data-trim>
+							    Redis客户端执行一条命令分为如下四个过程：
+							    ①发送命令、②命令排队、③命令执行、④返回结果
+							    其中①+④称为Round Trip Time（RTT，往返时间）。
+
+							    Redis提供了批量操作命令（例如mget、mset等），有效地节约RTT。但大部分命令是不支持批量操作的，
+							例如要执行n次hgetall命令，并没有mhgetall命令存在，需要消耗n次RTT。Redis的客户端和服务端可能部署
+							在不同的机器上。例如客户端在北京，Redis服务端在上海，两地直线距离约为1300公里，那么1次RTT时间=
+							1300×2/（300000×2/3）=13毫秒（光在真空中传输速度为每秒30万公里，这里假设光纤为光速的2/3），那
+							么客户端在1秒内大约只能执行80次左右的命令，这个和Redis的高并发高吞吐特性背道而驰。
+
+							    Pipeline（流水线）机制能改善上面这类问题，它能将一组Redis命令进行组装，通过一次RTT传输给Redis，
+							再将这组Redis命令的执行结果按顺序返回给客户端，下图为没有使用Pipeline执行了n条命令，整个过程需要n
+							次RTT。
+						</code></pre>
+					</section>
+					<section>
+						没有Pipeline执行n次命令模型<br>
+						<img src="./image/QQ截图20180515203753.png">
+					</section>
+					<section>
+						使用Pipeline执行n条命令模型，整个过程需要1次RTT
+						<img src="./image/QQ截图20180515204631.png">
+					</section>
+					<section>
+						<!--在不同网络下，10000条set非Pipeline和Pipeline的执行时间对比
+						客户端和服务端的网络延时越大，Pipeline的效果越明显。-->
+						<table style="font-size:26px">
+							<tr>
+								<td colspan="4">在不同网络下，10000条set非Pipeline和Pipeline的执行时间对比</td>
+							</tr>
+							<tr>
+								<td>网络</td>
+								<td>延迟</td>
+								<td>非Pipeline</td>
+								<td>Pipeline</td>
+							</tr>
+							<tr>
+								<td>本机</td>
+								<td>0.17ms</td>
+								<td>573ms</td>
+								<td>134ms</td>
+							</tr>
+							<tr>
+								<td>内网服务器</td>
+								<td>0.41ms</td>
+								<td>1610ms</td>
+								<td>240ms</td>
+							</tr>
+							<tr>
+								<td>异地机房</td>
+								<td>7ms</td>
+								<td>78499ms</td>
+								<td>1104ms</td>
+							</tr>
+							<tr>
+								<td colspan="4" style="color:green">
+									<br>结论：
+									<br>①Pipeline执行速度一般比逐条执行要快
+									<br>②客户端和服务端的网络延时越大，Pipeline的效果越明显
+								</td>
+							</tr>
+						</table>
+						<aside class="notes">
+							Pipeline虽然好用，但是每次Pipeline组装的命令个数不能没有节制，否则一次组装Pipeline数据量过大，一方面会增加客户端的等待时间，另一方面会造成一定的网络阻塞，可以将一次包含大量命令的Pipeline拆分成多次较小的Pipeline来完成。
+						</aside>
 					</section>
 				</section>
 			</div>
